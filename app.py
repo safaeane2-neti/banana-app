@@ -148,7 +148,7 @@ def create_dashboard_html(temp, humidity, ethylene, day, shelf_life, economics_i
         <div style="background: linear-gradient(135deg, #ffeaa7 0%, #fdcb6e 100%); padding: 25px; border-radius: 18px; box-shadow: 0 10px 25px rgba(0,0,0,0.15); text-align: center;">
             <p style="font-size: 22px; color: #2d3436; margin: 0; font-weight: bold;">{"💡 ✨ Ship now for best profit!" if abs(day - optimal_info['day']) < 0.5 else f"💡 ⏰ Wait {optimal_info['day'] - day:.0f} more days for optimal profit!" if day < optimal_info['day'] else "💡 ⚠️ You've passed the optimal shipping window!"}</p>
         </div>
-    </div><style>@keyframes bounce {{0%, 100% {{ transform: translateY(0); }} 50% {{ transform: translateY(-10px); }}}</style>"""
+    </div><style>@keyframes bounce {{0%, 100% {{ transform: translateY(0); }} 50% {{ transform: translateY(-10px); }}</style>"""
     return st.components.v1.html(html, height=1400)
 
 
