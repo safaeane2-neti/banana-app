@@ -18,7 +18,7 @@ model, scaler, feature_cols = load_model()
 
 # --- The "API" Prediction Function ---
 def predict_shelf_life(temp, humidity, ethylene, day):
-    input_df = pd.DataFrame([{'temperature_C': temp, 'humidity_percent': humidity, 'ethylene_ppm': ethylene, 'day': day}])
+    input_df = pd.DataFrame([{'temperature_celsius': temp, 'humidity_percent': humidity, 'ethylene_ppm': ethylene, 'day': day}])
     
     # This is the same feature engineering from your training script
     input_df['day_squared'] = input_df['day'] ** 2
@@ -29,8 +29,7 @@ def predict_shelf_life(temp, humidity, ethylene, day):
     input_df['humidity_normalized'] = (input_df['humidity_percent'] - 75) / 25
     input_df['arrhenius_factor'] = np.exp(0.08 * (input_df['temperature_C'] - 20))
     input_df['humidity_stress'] = np.abs(input_df['humidity_percent'] - 87.5) / 50.0
-    print("FEATURES THE APP IS LOOKING FOR:", feature_cols)
-    print("COLUMNS THE APP ACTUALLY HAS:", list(input_df.columns))
+    
     input_processed = input_df[feature_cols]
     input_scaled = scaler.transform(input_processed)
     prediction = model.predict(input_scaled)[0]
