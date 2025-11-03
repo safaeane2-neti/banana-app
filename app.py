@@ -23,11 +23,11 @@ def predict_shelf_life(temp, humidity, ethylene, day):
     # This is the same feature engineering from your training script
     input_df['day_squared'] = input_df['day'] ** 2
     input_df['day_cubed'] = input_df['day'] ** 3
-    input_df['temp_humidity_interaction'] = input_df['temperature_C'] * input_df['humidity_percent']
-    input_df['temp_ethylene_interaction'] = input_df['temperature_C'] * input_df['ethylene_ppm']
-    input_df['temp_normalized'] = (input_df['temperature_C'] - 20) / 10
+    input_df['temp_humidity_interaction'] = input_df['temperature_celsius'] * input_df['humidity_percent']
+    input_df['temp_ethylene_interaction'] = input_df['temperature_celsius'] * input_df['ethylene_ppm']
+    input_df['temp_normalized'] = (input_df['temperature_celsius'] - 20) / 10
     input_df['humidity_normalized'] = (input_df['humidity_percent'] - 75) / 25
-    input_df['arrhenius_factor'] = np.exp(0.08 * (input_df['temperature_C'] - 20))
+    input_df['arrhenius_factor'] = np.exp(0.08 * (input_df['temperature_celsius'] - 20))
     input_df['humidity_stress'] = np.abs(input_df['humidity_percent'] - 87.5) / 50.0
     
     input_processed = input_df[feature_cols]
