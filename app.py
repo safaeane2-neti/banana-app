@@ -40,29 +40,58 @@ st.set_page_config(page_title=" Twinsie 🍌", page_icon="🍌", layout="centere
 
 st.markdown("""
 <style>
+    /* Main Page Styles */
+    .stApp {
+        background-color: #FFFEF7; /* Soft Cream */
+        color: #5D5D5D; /* Soft Gray for text */
+    }
     .main-header {
-        font-size: 3rem;
-        color: #e67e22;
+        font-size: 3.5rem;
+        color: #F5C542; /* Cute Yellow */
         text-align: center;
         font-weight: 700;
     }
     .sub-header {
         text-align: center;
-        color: #7f8c8d;
+        color: #A5A5A5;
+        font-style: italic;
     }
-    .metric-card {
-        background-color: #fff3b2;
-        padding: 1.5rem;
-        border-radius: 1rem;
-        border: 2px solid #f39c12;
+
+    /* Sidebar Styles */
+    .css-1d391kg {
+        background-color: #FFFFFF;
+        border-right: 2px solid #F5C542;
+    }
+    .css-17eq0hr {
+        color: #5D5D5D;
+    }
+
+    /* Metric Card Styles */
+    div[data-testid="metric-container"] {
+        background-color: #FFFFFF;
+        border-left: 5px solid #F5C542;
+        padding: 1rem;
+        border-radius: 10px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    }
+    div[data-testid="metric-container"] > div > div > div > div {
+        color: #5D5D5D;
+    }
+    div[data-testid="metric-container"] label {
+        color: #A5A5A5;
+        font-size: 1rem;
+    }
+    
+    /* Big Banana Visual */
+    .big-banana {
+        font-size: 6rem;
         text-align: center;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        animation: gentle-pulse 2s infinite ease-in-out;
     }
-    .stMetric > div > div > div > div {
-        background-color: #fff3b2;
-        border: 2px solid #f39c12;
-        padding-bottom: 1rem;
-        border-radius: 0.5rem;
+    @keyframes gentle-pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+        100% { transform: scale(1); }
     }
 </style>
 """, unsafe_allow_html=True)
