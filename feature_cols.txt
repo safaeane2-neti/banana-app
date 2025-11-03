@@ -1,0 +1,12 @@
+day
+temperature_celsius
+humidity_percent
+ethylene_ppm
+day_squared
+day_cubed
+temp_humidity_interaction
+temp_ethylene_interaction
+temp_normalized
+humidity_normalized
+arrhenius_factor
+humidity_stress
