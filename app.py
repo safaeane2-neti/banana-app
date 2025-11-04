@@ -1,4 +1,4 @@
-# app.py - The Upgraded & Interactive Twinsie System
+# app.py - The Intelligent System Upgrade
 
 import streamlit as st
 import numpy as np
@@ -12,13 +12,14 @@ from sklearn.preprocessing import StandardScaler
 warnings.filterwarnings('ignore')
 
 # ============================================================================
-# ALL CLASSES AND FUNCTIONS (Mostly the same, with one key addition)
+# ALL CLASSES AND FUNCTIONS (Now with an Intelligent Agent!)
 # ============================================================================
 
-# --- Economic Engine ---
+# --- Economic Engine (The Base Class) ---
 class BananaEconomics:
     def __init__(self):
-        self.market_prices = {'export': 2.8, 'wholesale': 2.2, 'retail': 3.5, 'discount': 2.0, 'processing': 0.9}
+        self.base_market_prices = {'export': 2.8, 'wholesale': 2.2, 'retail': 3.5, 'discount': 2.0, 'processing': 0.9}
+        self.market_prices = self.base_market_prices.copy() # Work with a copy
         self.daily_storage_cost = 0.08
         self.transport_cost = 0.15
     def calculate_ripeness(self, shelf_life, current_day):
@@ -48,6 +49,15 @@ class BananaEconomics:
                 best_day = day
         return best_day, best_value
 
+# --- NEW: The Adaptive Learning Agent ---
+class AdaptiveEconomics(BananaEconomics):
+    def adjust_prices(self, supply_demand_ratio):
+        # Adjust prices based on simulated market conditions
+        # A ratio < 1 means high demand, prices go up. > 1 means high supply, prices go down.
+        adjustment = np.clip(1 + (0.2 * (1 - supply_demand_ratio)), 0.8, 1.2)
+        for k in self.market_prices:
+            self.market_prices[k] = self.base_market_prices[k] * adjustment
+
 # --- Feature Engineering ---
 def engineer_features(df):
     df = df.copy()
@@ -61,8 +71,8 @@ def engineer_features(df):
     df['humidity_stress'] = np.abs(df['humidity_percent'] - 87.5) / 50.0
     return df
 
-# --- Prediction API (NOW WITH CACHING!) ---
-@st.cache_data # This decorator makes the app fast!
+# --- Prediction API (with Caching) ---
+@st.cache_data
 def predict_shelf_life(temp, humidity, ethylene, day):
     input_df = pd.DataFrame([{'temperature_celsius': temp, 'humidity_percent': humidity, 'ethylene_ppm': ethylene, 'day': day}])
     input_df = engineer_features(input_df)
@@ -71,9 +81,18 @@ def predict_shelf_life(temp, humidity, ethylene, day):
     prediction = model.predict(input_scaled)[0]
     return np.clip(prediction, 0, 14)
 
-# --- NEW: Dynamic Profit Chart Function ---
+# --- NEW: Waste Impact Metric ---
+def calculate_waste_reduction(optimal_day, current_day):
+    # Quantifies the percentage of waste avoided by shipping at the optimal time
+    days_late = max(0, current_day - optimal_day)
+    potential_waste_per_day = 0.1  # Assume 10% of value is lost per day past optimal
+    total_potential_waste = days_late * potential_waste_per_day
+    reduction = (1 - total_potential_waste) * 100
+    return np.clip(reduction, 0, 100)
+
+# --- Dynamic Profit Chart ---
 def create_profit_chart(temp, humidity, ethylene):
-    economics = BananaEconomics()
+    economics = AdaptiveEconomics()
     data = []
     for day in range(1, 11):
         shelf_life = predict_shelf_life(temp, humidity, ethylene, day)
@@ -86,10 +105,10 @@ def create_profit_chart(temp, humidity, ethylene):
     fig.update_layout(template="simple_white")
     return fig
 
-# --- Clean & Minimalist HTML Dashboard (Mostly the same) ---
-def create_dashboard_html(temp, humidity, ethylene, day, shelf_life, economics_info, optimal_info):
+# --- The Dashboard (Updated with Waste Metric) ---
+def create_dashboard_html(temp, humidity, ethylene, day, shelf_life, economics_info, optimal_info, waste_reduction):
     main_color = '#f39c12'
-    economics = BananaEconomics()
+    economics = AdaptiveEconomics()
     ripeness = economics.calculate_ripeness(shelf_life, day)
     market, _, emoji = economics.get_market_segment(ripeness)
 
@@ -99,12 +118,19 @@ def create_dashboard_html(temp, humidity, ethylene, day, shelf_life, economics_i
             <h1 style="font-size: 42px; font-weight: 700; color: #333; margin: 0;">Twinsie Dashboard</h1>
             <p style="font-size: 18px; color: #777; margin-top: 8px;">AI-Powered Ripeness & Profitability Analysis</p>
         </div>
-        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 30px;">
+        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin-bottom: 30px;">
             <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; text-align: center; border-left: 4px solid {main_color};">
                 <div style="font-size: 24px; margin-bottom: 5px;">{emoji}</div>
                 <div style="font-size: 14px; color: #777; text-transform: uppercase; letter-spacing: 0.5px;">Market</div>
                 <div style="font-size: 20px; font-weight: 600; color: #333;">{market}</div>
             </div>
+            <div style="background: #e8f5e9; padding: 20px; border-radius: 8px; text-align: center; border-left: 4px solid #2ecc71;">
+                <div style="font-size: 24px; margin-bottom: 5px;">🌱</div>
+                <div style="font-size: 14px; color: #777; text-transform: uppercase; letter-spacing: 0.5px;">Waste Reduction</div>
+                <div style="font-size: 20px; font-weight: 600; color: #333;">{waste_reduction:.1f}%</div>
+            </div>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 30px;">
             <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; text-align: center;">
                 <div style="font-size: 24px; margin-bottom: 5px;">⏳</div>
                 <div style="font-size: 14px; color: #777; text-transform: uppercase; letter-spacing: 0.5px;">Shelf Life</div>
@@ -147,7 +173,7 @@ def create_dashboard_html(temp, humidity, ethylene, day, shelf_life, economics_i
         </div>
     </div>
     """
-    return st.components.v1.html(html, height=700)
+    return st.components.v1.html(html, height=750)
 
 
 # ============================================================================
@@ -168,13 +194,15 @@ model, scaler, feature_cols = load_model()
 # --- Page Setup ---
 st.set_page_config(page_title="Twinsie Dashboard 🍌", page_icon="🍌", layout="centered")
 
-# --- Sidebar for User Controls ---
+# --- Sidebar for User Controls (Now with Market Simulation!) ---
 st.sidebar.header("🔧 Simulation Controls")
 temp = st.sidebar.slider("🌡️ Temperature (°C)", 15.0, 30.0, 22.0)
 humidity = st.sidebar.slider("💧 Humidity (%)", 60.0, 95.0, 85.0)
 ethylene = st.sidebar.slider("🍈 Ethylene (ppm)", 5.0, 50.0, 20.0)
 current_day = st.sidebar.slider("📅 Current Day", 0.5, 12.0, 3.0)
-
+st.sidebar.markdown("---")
+st.sidebar.subheader("🧠 Intelligent Market Simulation")
+supply_demand_ratio = st.sidebar.slider("Supply vs. Demand", 0.5, 1.5, 1.0, help="Simulate market conditions. < 1.0 is high demand, > 1.0 is high supply.")
 run_simulation = st.sidebar.toggle("▶️ Run Live Simulation")
 
 # --- Main App Content ---
@@ -182,17 +210,19 @@ st.title("🍌 Live Twinsie Dashboard 🍌")
 st.markdown("Your personal AI-powered banana predictor bestie.")
 
 # --- Initial Analysis (Always Visible) ---
-economics = BananaEconomics()
+economics = AdaptiveEconomics()
+economics.adjust_prices(supply_demand_ratio) # The agent adjusts prices!
 shelf_life = predict_shelf_life(temp, humidity, ethylene, current_day)
 ripeness = economics.calculate_ripeness(shelf_life, current_day)
 economics_info = economics.calculate_value(ripeness, current_day)
 optimal_day, optimal_value = economics.find_optimal_day(temp, humidity, ethylene)
 optimal_info = {'day': optimal_day, 'value': optimal_value}
+waste_reduction = calculate_waste_reduction(optimal_day, current_day)
 
 # Display the main dashboard
 create_dashboard_html(
     temp, humidity, ethylene, current_day, shelf_life,
-    economics_info, optimal_info
+    economics_info, optimal_info, waste_reduction
 )
 
 # Display the profit chart
@@ -202,11 +232,10 @@ profit_chart = create_profit_chart(temp, humidity, ethylene)
 st.plotly_chart(profit_chart, use_container_width=True)
 
 
-# --- Live Simulation ---
+# --- Live Simulation (In a Placeholder) ---
 if run_simulation:
     placeholder = st.empty()
-    for i in range(30): # Run for 30 cycles
-        # Simulate small fluctuations in sensor data
+    for i in range(30):
         sim_temp = temp + np.random.uniform(-1, 1)
         sim_humidity = humidity + np.random.uniform(-5, 5)
         sim_ethylene = ethylene + np.random.uniform(-2, 2)
