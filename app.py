@@ -1,8 +1,78 @@
-# --- NEW Clean & Minimalist HTML Dashboard ---
+# app.py - The complete Twinsie System for Streamlit!
+
+import streamlit as st
+import numpy as np
+import pandas as pd
+import joblib
+import time
+import warnings
+from sklearn.preprocessing import StandardScaler
+
+warnings.filterwarnings('ignore')
+
+# ============================================================================
+# ALL CLASSES AND FUNCTIONS
+# ============================================================================
+
+# --- Economic Engine ---
+class BananaEconomics:
+    def __init__(self):
+        self.market_prices = {'export': 2.8, 'wholesale': 2.2, 'retail': 3.5, 'discount': 2.0, 'processing': 0.9}
+        self.daily_storage_cost = 0.08
+        self.transport_cost = 0.15
+    def calculate_ripeness(self, shelf_life, current_day):
+        total_life = current_day + shelf_life
+        ripeness = 1 + (current_day / total_life) * 6
+        return min(7, max(1, ripeness))
+    def get_market_segment(self, ripeness):
+        if ripeness < 3: return 'Export', self.market_prices['export'], '🌍'
+        elif ripeness < 4: return 'Wholesale', self.market_prices['wholesale'], '🏪'
+        elif ripeness < 5.5: return 'Retail', self.market_prices['retail'], '🛒'
+        elif ripeness < 6.5: return 'Discount', self.market_prices['discount'], '💸'
+        else: return 'Processing', self.market_prices['processing'], '🍞'
+    def calculate_value(self, ripeness, days_stored, quality=0.95):
+        market, base_price, emoji = self.get_market_segment(ripeness)
+        price = base_price * quality
+        cost = (self.daily_storage_cost * days_stored) + self.transport_cost
+        net_value = max(0, price - cost)
+        return {'market': market, 'emoji': emoji, 'base_price': base_price, 'net_value': net_value}
+    def find_optimal_day(self, temp, humidity, ethylene):
+        best_day, best_value = 1, 0
+        for day in range(1, 11):
+            shelf_life = predict_shelf_life(temp, humidity, ethylene, day)
+            ripeness = self.calculate_ripeness(shelf_life, day)
+            value_info = self.calculate_value(ripeness, day)
+            if value_info['net_value'] > best_value:
+                best_value = value_info['net_value']
+                best_day = day
+        return best_day, best_value
+
+# --- Feature Engineering ---
+def engineer_features(df):
+    df = df.copy()
+    df['day_squared'] = df['day'] ** 2
+    df['day_cubed'] = df['day'] ** 3
+    df['temp_humidity_interaction'] = df['temperature_celsius'] * df['humidity_percent']
+    df['temp_ethylene_interaction'] = df['temperature_celsius'] * df['ethylene_ppm']
+    df['temp_normalized'] = (df['temperature_celsius'] - 20) / 10
+    df['humidity_normalized'] = (df['humidity_percent'] - 75) / 25
+    df['arrhenius_factor'] = np.exp(0.08 * (df['temperature_celsius'] - 20))
+    df['humidity_stress'] = np.abs(df['humidity_percent'] - 87.5) / 50.0
+    return df
+
+# --- Prediction API ---
+def predict_shelf_life(temp, humidity, ethylene, day):
+    input_df = pd.DataFrame([{'temperature_celsius': temp, 'humidity_percent': humidity, 'ethylene_ppm': ethylene, 'day': day}])
+    input_df = engineer_features(input_df)
+    input_processed = input_df[feature_cols]
+    input_scaled = scaler.transform(input_processed)
+    prediction = model.predict(input_scaled)[0]
+    return np.clip(prediction, 0, 14)
+
+# --- Clean & Minimalist HTML Dashboard ---
 def create_dashboard_html(temp, humidity, ethylene, day, shelf_life, economics_info, optimal_info):
     
     # --- CUSTOMIZE YOUR MAIN COLOR HERE ---
-    # Try these: '#3498db' (Blue), '#2ecc71' (Green), '#9b59b6' (Purple), '#e74c3c' (Red)
     main_color = '#f39c12' # A nice, soft orange
 
     ripeness = economics.calculate_ripeness(shelf_life, day)
@@ -90,4 +160,51 @@ def create_dashboard_html(temp, humidity, ethylene, day, shelf_life, economics_i
     """
     
     return st.components.v1.html(html, height=700)
-       
+
+
+# ============================================================================
+# THE STREAMLIT APP ITSELF
+# ============================================================================
+
+# --- Load the model and artifacts ---
+@st.cache_resource
+def load_model():
+    model = joblib.load('hybrid_model.pkl')
+    scaler = joblib.load('scaler.pkl')
+    with open('feature_cols.txt', 'r') as f:
+        feature_cols = f.read().splitlines()
+    return model, scaler, feature_cols
+
+model, scaler, feature_cols = load_model()
+
+# --- Page Setup ---
+st.set_page_config(page_title="Twinsie Dashboard 🍌", page_icon="🍌", layout="centered")
+
+st.title("🍌 Live Twinsie Dashboard 🍌")
+st.markdown("Your personal AI-powered banana predictor bestie.")
+
+# --- The Main App ---
+if st.button("🎬 Start Live Simulation"):
+    economics = BananaEconomics()
+    for i in range(30):
+        temp = 20 + np.random.uniform(-2, 5)
+        humidity = 85 + np.random.uniform(-10, 10)
+        ethylene = 15 + np.random.uniform(-5, 20)
+        current_day = np.random.uniform(1, 8)
+        
+        shelf_life = predict_shelf_life(temp, humidity, ethylene, current_day)
+        
+        ripeness = economics.calculate_ripeness(shelf_life, current_day)
+        economics_info = economics.calculate_value(ripeness, current_day)
+        optimal_day, optimal_value = economics.find_optimal_day(temp, humidity, ethylene)
+        optimal_info = {'day': optimal_day, 'value': optimal_value}
+        
+        create_dashboard_html(
+            temp, humidity, ethylene, current_day, shelf_life,
+            economics_info, optimal_info
+        )
+        
+        my_placeholder = st.empty()
+        my_placeholder.text(f"Next update in 5 seconds... ({i+1}/30)")
+        time.sleep(5)
+        my_placeholder.empty()
