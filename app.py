@@ -90,4 +90,4 @@ def create_dashboard_html(temp, humidity, ethylene, day, shelf_life, economics_i
     """
     
     return st.components.v1.html(html, height=700)
-        my_placeholder.empty()
+       
