@@ -11,8 +11,9 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import cross_val_predict
 
 warnings.filterwarnings('ignore')
-
+# ============================================================================
 # ALL CLASSES & FUNCTIONS YIPPEE
+# ============================================================================
 
 # --- Model Card ---
 MODEL_CARD = {
@@ -208,9 +209,9 @@ def create_dashboard_html(temp, humidity, ethylene, day, shelf_life, y_std, econ
     </div>
     """
     return st.components.v1.html(html, height=800)
-
+# ============================================================================
 # THE STREAMLIT APP
-
+# ============================================================================
 @st.cache_resource
 def load_model():
     model = joblib.load('hybrid_model.pkl')
