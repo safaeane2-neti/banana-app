@@ -74,9 +74,9 @@ def create_dashboard_html(temp, humidity, ethylene, day, shelf_life, economics_i
     
     # --- CUSTOMIZE YOUR MAIN COLOR HERE ---
     main_color = '#f39c12' # A nice, soft orange
-
-    ripeness = economics.calculate_ripeness(shelf_life, day)
+    
     economics = BananaEconomics()
+    ripeness = economics.calculate_ripeness(shelf_life, day)
     market, _, emoji = economics.get_market_segment(ripeness)
 
     html = f"""
